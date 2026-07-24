@@ -3,7 +3,7 @@ package com.employee.service;
 import com.employee.entity.Employee;
 import com.employee.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
-
+import com.employee.exception.ResourceNotFoundException;
 import java.util.List;
 
 @Service
@@ -19,7 +19,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(Employee employee) {
 
         if (employeeRepository.existsByEmail(employee.getEmail())) {
-            throw new RuntimeException("Employee with this email already exists.");
+            throw new IllegalArgumentException("Employee with this email already exists.");
         }
 
         return employeeRepository.save(employee);
@@ -35,7 +35,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return employeeRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Employee not found with ID : " + id));
+                        new ResourceNotFoundException("Employee not found with ID : " + id));
     }
 
     @Override
