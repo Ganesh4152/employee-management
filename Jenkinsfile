@@ -2,68 +2,83 @@ pipeline {
 
     agent any
 
-    tools {
-        maven 'Maven'
-        jdk 'Java21'
+    environment {
+        DOCKER_USER = "gani4152"
+        IMAGE_BACKEND = "employee-management-backend"
+        IMAGE_FRONTEND = "employee-management-frontend"
     }
 
     stages {
 
-        stage('Checkout Source') {
-
+        stage('Checkout') {
             steps {
-
-                git branch: 'main',
-                url: 'https://github.com/Ganesh4152/employee-management.git'
-
+                checkout scm
             }
-
         }
 
         stage('Build Backend') {
-
             steps {
-
                 dir('backend') {
-
-                    sh 'mvn clean package'
-
+                    sh 'mvn clean package -DskipTests'
                 }
-
             }
-
         }
 
-        stage('Build Docker Images') {
-
+        stage('Docker Build Backend') {
             steps {
-
-                sh 'docker compose build'
-
+                dir('backend') {
+                    sh 'docker build -t $DOCKER_USER/$IMAGE_BACKEND:v1 .'
+                }
             }
-
         }
 
-        stage('Stop Old Containers') {
-
+        stage('Docker Build Frontend') {
             steps {
-
-                sh 'docker compose down'
-
+                dir('frontend/employee-management-ui') {
+                    sh 'docker build -t $DOCKER_USER/$IMAGE_FRONTEND:v1 .'
+                }
             }
-
         }
 
-        stage('Deploy Application') {
-
+        stage('Docker Login') {
             steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'USER',
+                        passwordVariable: 'PASS'
+                    )
+                ]) {
 
-                sh 'docker compose up -d'
-
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    '''
+                }
             }
-
         }
 
+        stage('Push Backend') {
+            steps {
+                sh 'docker push $DOCKER_USER/$IMAGE_BACKEND:v1'
+            }
+        }
+
+        stage('Push Frontend') {
+            steps {
+                sh 'docker push $DOCKER_USER/$IMAGE_FRONTEND:v1'
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "Pipeline Completed Successfully"
+        }
+
+        failure {
+            echo "Pipeline Failed"
+        }
     }
 
 }
