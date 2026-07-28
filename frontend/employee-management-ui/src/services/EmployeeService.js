@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://65.2.79.252:8082/api/employees";
+const API_URL = "http://13.235.36.25:8082/api/employees";
 
 const getAllEmployees = () => axios.get(API_URL);
 
@@ -16,10 +16,12 @@ const updateEmployee = (id, employee) =>
 const deleteEmployee = (id) =>
     axios.delete(`${API_URL}/${id}`);
 
-export default {
+const EmployeeService = {
     getAllEmployees,
     getEmployeeById,
     createEmployee,
     updateEmployee,
     deleteEmployee
 };
+
+export default EmployeeService;
